@@ -1,0 +1,80 @@
+---
+title: "Interactieve Plots met Plotly"
+author: "Wessel"
+date: "11/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introductie
+
+Hallo, ik ben Wessel werkzaam bij CROPLAND, welkom op ons YouTube-kanaal. Dit is deel twee van een driedelige reeks video's waarin ik jullie uitleg hoe je met Shiny een web applicatie kan maken.
+
+Vandaag in de tweede video ga ik jullie uitleggen hoe je met R interactieve visualisaties kan maken. Deze visualisaties gaan we maken op data die we via API hebben afgehaald, zoals getoond in de eerste video. In deze video ga ik jullie uitleggen hoe je die data kan visualiseren met Plotly, en in de derde en laatste video maken we een Shiny applicatie met een interactieve visualisatie die we gaan maken in deze video.
+
+hieronder zien we het uiteindelijke resultaat, een interactieve grafiek waarop we bv. kunnen inzoomen op bepaalde tijdsperiode of kunnen kiezen welke bedrijven we samen willen visualiseren op de grafiek:
+
+```{r, echo=FALSE}
+r <- readRDS(file = "linechart.rds")
+
+r
+```
+
+## Packages
+
+Om te starten gaan we de R packages laden die we nodig hebben. Het plotly pakket is het pakket dat we gebruiken voor de visualisaties en readr hebben we nodig om onze API data in te laden.
+
+```{r packages, warning=FALSE, message=FALSE}
+library(plotly)
+library(readr)
+```
+
+
+## data inlezen
+
+Om te beginnen gaan we onze API data inladen. In de history.csv zitten de aandeelprijzen van 2021 voor verschillende grote tech bedrijven. We laden de data in met de read_csv functie uit het readr package en wijzen dit toe aan een variable df.
+
+```{r read, warning=FALSE, message=FALSE}
+df <- read_csv("history.csv")
+```
+
+
+## Line chart
+
+Nu gaan we een line chart maken om de data van de verschillende bedrijven te visualiseren. Dat doen we met de plot_ly functie. Op de eerste lijn maken we een grafiek met enkel de close prijs voor Tesla aandelen. We geven eerst het dataframe mee en filteren er enkel de prijzen uit voor Tesla. Vervolgens geven we de kolommen mee die we willen gebruiken voor de x en de y as. We geven ook een naam mee die gaat gebruikt worden in de legende. tenslotte geven we ook mee dat het op een scatter plot gaat; xy punten op een grafiek, en dat we deze willen connecteren met een lijn. Vervolgens voegen we met add_trace de data voor de andere bedrijven ook toe aan de grafiek. We geven telkens een naam mee, en ook een kleur zodat we de verschillende lijnen gemakkelijker van elkaar kunnen onderscheiden. Tenslotte geven we de plot nog een titel mee en passen we het y label aan.
+
+```{r linechart, warning=FALSE, message=FALSE}
+fig <- plot_ly(data = filter(df, company == "Tesla"), x = ~date, y = ~close,
+  name = 'Tesla', type = 'scatter', mode = 'lines', line = list(color = 'red', width = 4)) 
+fig <- fig %>% add_trace(data = filter(df, company == "Amazon"), y = ~close,
+  name = 'Amazon', line = list(color = 'darkblue', width = 4)) 
+fig <- fig %>% add_trace(data = filter(df, company == "Apple"), y = ~close,
+  name = 'Apple', line = list(color = 'darkgreen', width = 4)) 
+fig <- fig %>% add_trace(data = filter(df, company == "Microsoft"), y = ~close,
+  name = 'Microsoft', line = list(color = 'purple', width = 4)) 
+fig <- fig %>% layout(title = "Tech Stock Prices", yaxis = list(title = "Price ($)"))
+
+fig
+```
+
+```{r, include=FALSE}
+saveRDS(fig, file = "linechart.rds")
+```
+
+## Candlestick chart
+
+Een specifiek type grafiek dat vaak gebruikt wordt om aandeelprijzen te monitoren is een candlestick chart. hieronder zien we een voorbeeld van zo'n chart toegepast op Tesla. De enige aanpassing die we maken op voorgaande code is dat we kiezen voor een candlstick chart ipv een scatter plot. Bijkomend geven we ook aan in welke kolommen de open, close, high en low zitten. In dit geval noemen deze gewoon hetzelfde.
+
+```{r candlechart, warning=FALSE, message=FALSE}
+fig <- filter(df, company == "Tesla") %>%
+  plot_ly(x = ~date, type="candlestick",
+          open = ~open, close = ~close,
+          high = ~high, low = ~low) 
+fig <- fig %>% layout(title = "Tech Stock Prices", yaxis = list(title = "Price ($)"))
+
+fig
+```

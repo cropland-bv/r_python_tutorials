@@ -1,0 +1,10 @@
+
+Hallo, ik ben Wessel werkzaam bij CROPLAND, welkom op ons YouTube-kanaal. Dit is deel drie van een driedelige reeks video's waarin ik jullie uitleg hoe je met Shiny een web applicatie kan maken.
+
+Vandaag in deze laatste video ga ik jullie uitleggen hoe je met R shiny web applicaties kan maken. Ik ga hierbij de visualisatie van de vorige video gebruiken. Hier zie je de applicatie, deze bestaat uit een sidebar met twee inputs die je kan gebruiken om interactief de grafiek aan te passen. Enerzijds kan je een tijdsinterval kiezen waarvoor je data wil selecteren, en anderzijds kan je kiezen voor welk bedrijf je de aandeelprijzen wil gaan bekijken.
+
+Het package dat we hiervoor gebruiken noemt simpelweg shiny, de andere packages die we laden zijn packages die we ook al hebben gebruikt in voorgaande video's.
+
+Voor we onze applicatie bouwen laden we als eerste stap onze data in, die we nodig hebben bij het plotten van de grafiek. Vervolgens definieren we onze shiny applicatie. Een shiny applicatie bestaat uit twee delen, een ui en een server. De ui is de frontend en de server is de achterliggende code die we nodig hebben om de applicatie te laten werken en interactiviteit toe te voegen.
+We starten met een fluidPage, dit zorgt ervoor dat de Shiny elementen die we toevoegen automatisch de volledige breedte van het scherm innemen. Vervolgens voegen we onze sidebar toe, daaraan voegen we een dateRangeInput toe en een selectize input. De dateRangeInput neemt als argumenten een id, label, min, max, start en einde. De selectizeInput neemt als argumenten mee een id, label, de keuzeopties en de optie die als default wordt geselecteerd. Deze inputs zijn reactieve elementen, dat wil zeggen dat wanneer je daaraan iets aanpast, automatisch de code wordt getriggerd waarin je dat element gebruikt. In dit geval is dit de renderPlotly functie in de server code. Deze functie maakt de grafiek aan die getoond wordt in de mainPanel in de plotlyOutput.
+Het commando dat we nodig hebben om de applicatie op te starten is de runApp functie dat als input argumenten de ui en server heeft.

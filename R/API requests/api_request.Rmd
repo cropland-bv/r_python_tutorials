@@ -1,0 +1,60 @@
+---
+title: "API requests maken met R"
+author: "Wessel"
+date: "11/18/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Packages
+
+
+```{r packages, warning=FALSE, message=FALSE}
+library(httr)
+library(dplyr)
+library(readr)
+```
+
+
+## Extract
+
+```{r Extract, warning=FALSE, message=FALSE, echo=FALSE}
+url <- paste0("https://api.polygon.io/v1/open-close/TSLA/2021-11-17")
+arguments <- list(apiKey = "OMcTE5UfoH9CLldh8d_pfVMQfOrz73Mo")
+
+r <- GET(url, query = arguments)
+
+r <- content(r)
+
+r
+```
+
+
+## Transform
+
+```{r Transform1, warning=FALSE, message=FALSE, echo=TRUE}
+r <- bind_rows(r)
+
+r
+```
+
+```{r Transform2, warning=FALSE, message=FALSE, echo=TRUE}
+r <- r %>%
+  mutate(company = "Tesla") %>%
+  select(company, date = from, open, close, high, low)
+
+r
+```
+
+
+## Load
+
+```{r Load, warning=FALSE, message=FALSE, echo=TRUE}
+write_csv(r, "Tesla.csv", append = TRUE)
+```

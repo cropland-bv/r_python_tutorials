@@ -1,0 +1,108 @@
+---
+title: "Text mining met R"
+author: "Jeroen Claes"
+date: "11/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(stringi)
+library(rvest)
+
+
+scrape <- function(url) {
+
+  pge <- read_html(url)
+  
+  txts <- pge %>% html_nodes(xpath="//p|//font|//h1|//h2|//h3|//h4|//span") %>%
+    html_text() %>%
+    stri_trim()
+  
+  txts<-txts[txts!=""]
+  
+  result <- tibble(url=url, text=txts)
+  return(result)
+}
+
+
+urls <- c("https://www.demorgen.be", "https://www.hbvl.be/", "https://www.standaard.be", "https://www.vrtnws.be", "https://www.gva.be")
+resultaten <- lapply(urls, scrape)
+resultaten <- resultaten %>%
+  bind_rows()
+```
+
+## Text mining met R
+
+![](~/Desktop/videochannel/6_text mining/textmining.png)
+ 
+## Packages
+```{r}
+library(tidytext)
+library(stopwords)
+library(dplyr)
+```
+
+## Data
+```{r}
+glimpse(resultaten)
+```
+
+
+## Text mining
+
+### Splitsen in woorden
+```{r}
+resultaten <- resultaten %>%
+  unnest_tokens(input=text, output="word", token="words")
+
+glimpse(resultaten)
+```
+
+### Stopwoorden uitfilteren
+
+```{r}
+stopwords("nl")
+```
+
+
+```{r}
+resultaten <- resultaten %>%
+  filter(!word %in% stopwords("nl"))
+glimpse(resultaten)
+```
+
+### Getallen uitfilteren
+```{r}
+resultaten <- resultaten %>%
+  filter(!grepl("[[:digit:]+]", word, perl=TRUE))
+glimpse(resultaten)
+```
+
+
+### Woorden tellen per website
+```{r}
+resultaten <- resultaten %>%
+  group_by(url, word) %>%
+  tally()
+glimpse(resultaten)
+```
+
+### Afstanden berekenen tussen de teksten
+```{r}
+distance <-resultaten %>%
+  cast_sparse(url, word, n) %>%
+  as.matrix() %>%
+  dist() %>%
+  as.matrix()
+
+distance
+```
+
+## Visualiseren
+```{r}
+distance %>%
+  heatmap(scale = "none", col=hcl.colors(25))
+```
+

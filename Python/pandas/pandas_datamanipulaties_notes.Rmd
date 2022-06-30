@@ -1,0 +1,105 @@
+---
+title: "Datamanipulaties in Python met Pandas"
+author: "Wessel"
+date: "11/18/2021"
+output:
+  html_document: default
+---
+
+
+## Introductie
+
+Hallo, ik ben Wessel werkzaam bij CROPLAND, welkom op ons YouTube-kanaal. Dit is deel twee van een driedelige reeks video's waarin ik jullie uitleg hoe je met Python een API kan maken.
+
+In de eerste video hebben we geleerd hoe je met web scraping tabellen van wikipedia kan scrapen. Vandaag in de tweede video ga ik jullie uitleggen hoe je met Python deze tabellen kan analyseren en manipuleren. Dat gaan we doen met de Pandas Python library.
+
+
+## Libraries
+
+Om te starten gaan we de Pandas library laden, dit is de enige library die we nodig gaan hebben tijdens deze video. We voeren daarvoor het commando uit: ..., dit betekent dat we verder in de code de pandas library gaan aanspreken met de afkorting pd.
+
+```{python, message=FALSE}
+import pandas as pd
+```
+
+
+## html tabellen inlezen
+
+Wat we nu gaan doen is de happiness score tabellen inlezen van de vorige video. Pandas heeft een specifieke functie voor het rechtstreeks inlezen van html's als een list van dataframes. Dat is de read_html functie, we geven als argument de naam van de file mee.
+
+```{python, include=FALSE}
+happiness_reports = pd.read_html("../happiness_tables.html", encoding='utf-8')
+```
+
+
+## tabellen splitsen
+
+Daarna gaan we even deze tabellen elk hun eigen variabele toekennen. Het happiness_reports object is een list. De indexering in Python start op 0, dus om de eerste dataframe uit de list te halen gebruiken we happiness_reports, vierkante haakjes, 0. Hetzelfde doen we voor de tweede dataframe, maar nu passen we de index aan naar 1, om zo het tweede element uit de list op te halen. Ter voorbeeld toon ik hier even de happiness score rankings van 2020.
+
+```{python, message=FALSE}
+happiness_report_2020 = happiness_reports[0]
+happiness_report_2019 = happiness_reports[1]
+
+happiness_report_2020.head(20)
+```
+
+
+## kolom toevoegen
+
+Daarna ga bij elk van de dataframes een kolom toevoegen met het jaartal. Met de volgende syntax maken we een kolom aan die volledig bestaat uit de waarde 2020 voor de happiness_report_2020, en met 2019 voor de happiness_report_2019.
+De dataframe van 2020 ziet er nu als volgt uit.
+
+```{python, message=FALSE}
+happiness_report_2020["Jaar"] = 2020
+happiness_report_2019["Jaar"] = 2019
+
+happiness_report_2020.head()
+```
+
+
+## kolommen hernoemen
+
+In een volgende stap gaan we de twee dataframes combineren, daarvoor moeten we eerst ervoor zorgen dat de kolomnamen tussen de twee dataframes overeenkomen. In het columns attribuut van de dataframe zit een list met de kolomnamen, die we hier voor beide dataframes overschrijven.
+
+```{python, message=FALSE, warning=FALSE}
+happiness_report_2020.columns = ["Positie", "Land", "Punten", "Jaar"]
+happiness_report_2019.columns = ["Positie", "Land", "Punten", "Jaar"]
+
+happiness_report_2020.head()
+```
+
+
+## dataframes combineren
+
+Nu kunnen we de twee dataframes combineren naar één dataframe. Dat doen we met de pandas concat functie. Als argument geven een list mee van de twee dataframes.
+
+```{python, message=FALSE}
+happiness_reports = pd.concat([happiness_report_2020, happiness_report_2019])
+```
+
+
+## data analyse
+
+Nu dat we één dataframe hebben kunnen we analyses beginnen doen. Het eerste wat we gaan onderzoeken is wat de beste ranking is die België heeft behaald. We filteren daarvoor eerst alle data waar het land gelijk is aan België, vervolgens aggregeren we met de agg functie, en berekenen we met de min functie, wat de minimum ranking is die België heeft behaald. Als we deze code even laten lopen zien we dat de beste ranking van België positie 18 is.
+
+```{python, message=FALSE}
+# beste ranking van België
+happiness_reports[happiness_reports['Land'] == "België"].agg({'Positie' : ['min']})
+```
+
+Op dezelfde manier kunnen we zo ook de gemiddelde score berekenen van Finland. We filteren eerst het dataframe op de rijen waar het land gelijk is aan Finland, vervolgens berekenen we het gemiddeld aantal punten met de mean aggregatie functie. We zien dan dat het gemiddeld aantal punten van Finland 7.789 is.
+
+```{python, message=FALSE}
+# gemiddelde score van Finland
+happiness_reports[happiness_reports['Land'] == "Finland"].agg({'Punten': ['mean']})
+```
+
+
+## dataframe wegschrijven
+
+Als laatste stap gaan we nu even de data wegschrijven, zodat we deze in de volgende video kunnen herbruiken. Dit doen we door de to_csv dataframe functie te gebruiken met als argument de naam van de file.
+
+```{python, message=FALSE}
+happiness_reports.to_csv('happiness_reports.csv')
+```
+

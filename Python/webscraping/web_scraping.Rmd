@@ -1,0 +1,49 @@
+---
+title: "Web scraping in Python"
+author: "Wessel"
+date: "11/18/2021"
+output:
+  html_document: default
+---
+
+
+## Libraries
+
+```{python, message=FALSE}
+import requests
+from bs4 import BeautifulSoup
+```
+
+
+## volledige webpagina afhalen
+
+```{python, message=FALSE}
+page = requests.get("https://nl.wikipedia.org/wiki/World_Happiness_Report")
+
+page.status_code
+```
+
+
+## webpagina doorzoeken
+
+```{python, message=FALSE}
+soup = BeautifulSoup(page.content, 'html.parser')
+
+print(soup.find("p").get_text())
+```
+
+
+## tabellen opzoeken
+
+```{python, message=FALSE}
+tables = soup.find_all("table")
+```
+
+
+## tabellen wegschrijven
+
+```{python, message=FALSE}
+with open("happiness_tables.html", "wb") as file:
+    file.write(tables)
+
+```

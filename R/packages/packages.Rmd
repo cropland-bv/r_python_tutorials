@@ -1,0 +1,27 @@
+---
+title: "7_Packages"
+author: "Jeroen Claes"
+date: "11/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages installeren
+```{r}
+install.packages("RColorBrewer")
+```
+
+
+## Packages gebruiken
+```{r}
+library(RColorBrewer)
+```
+
+
+### Een functie uit een package gebruiken zonder het package te laden
+```{r}
+RColorBrewer::brewer.pal()
+```

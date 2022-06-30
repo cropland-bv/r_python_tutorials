@@ -4,6 +4,10 @@
 
 # Session Data files
 .RData
+.Rproj
+.DS_Store
+.html
+
 
 # User-specific files
 .Ruserdata

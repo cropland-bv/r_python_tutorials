@@ -1,0 +1,77 @@
+---
+title: "Web scraping in Python"
+author: "Wessel"
+date: "11/18/2021"
+output:
+  html_document: default
+---
+
+
+```{r setup, include=FALSE}
+library("reticulate")
+use_python("/Users/wessel/Desktop/videochannel/venv/bin/python")
+```
+
+
+## Introductie
+
+Hallo, ik ben Wessel werkzaam bij CROPLAND, welkom op ons YouTube-kanaal. Dit is deel één van een driedelige reeks video's waarin ik jullie uitleg hoe je met Python een API kan maken.
+
+Vandaag in de eerste video ga ik jullie uitleggen hoe je met Python tabellen van Wikipedia kan webscrapen. Deze data willen we uiteindelijk in onze API gaan gebruiken. In de volgende video leg ik jullie uit hoe je met pandas die data kan bewerken, en in de laatste video maken we de API obv de databewerkingen die ik toon in de tweede video.
+
+De tabellen die we gaan scrapen zijn per land de happiness rankings scores voor 2019 en 2020. Dit zijn geaggregeerde scores obv een aantal criteria die bevragen hoe gelukkig de inwoners zich voelen. Het uiteindelijke resultaat van deze webscraping zijn twee html pagina's, één per tabel.
+
+
+## Libraries
+
+Om te starten gaan we de Python libraries laden die we nodig hebben om Wikipedia te scrapen. De request library hebben we nodig om de volledige webpagina af te halen, en uit bs4 gebruiken we de BeautifulSoup klasse om in de webpagina elementen gemakkelijk terug te vinden.
+
+```{python, message=FALSE}
+import requests
+from bs4 import BeautifulSoup
+```
+
+
+## volledige webpagina afhalen
+
+Vervolgens maken we met de requests library een GET request naar de wikipedia server. De server stuurt ons een response object terug dat we steken in de page variabele. Eén van de attributen van dit respons object is de status code van de request. Statuscode zijn 3-cijferige codes met elk een specifieke betekenis, waaruit we kunnen afleiden of er iets mis ging met onze request. De server stuurt ons een status code 200, wat de standaard code is voor succes. De server heeft dus onze request goed ontvangen en ons de juiste respons kunnen terugsturen.
+
+```{python, message=FALSE}
+page = requests.get("https://nl.wikipedia.org/wiki/World_Happiness_Report")
+
+page.status_code
+```
+
+
+## wegpagina doorzoeken
+
+Het volgende wat we nu gaan doen is uit de response de html content halen. We gaan hiervoor gebruik maken van de BeautifulSoup klasse. Met deze klasse kunnen we gemakkelijk de html content doorzoeken en hier tekst gaan uithalen.
+In de eerste stap maken we een BeautifulSoup object aan en stoppen dit in de variabele soup. We moeten hiervoor als eerste argument de html content meegeven, die zit in page.content, en anderzijds geven me aan dat het gaat om html. We kunnen nu dit nieuwe object gaan bevragen. We gaan nu in de webpagina de tekst opzoeken uit de eerste paragraaf. We geven aan met de letter p dat we willen zoeken naar een paragraaf. De find functie zoekt voor ons dan de eerste paragraaf in de html op die hij tegenkomt. Find geeft ons html terug, met get_text halen we daar nog even enkel de tekst uit.
+
+```{python, message=FALSE}
+soup = BeautifulSoup(page.content, 'html.parser')
+
+print(soup.find("p").get_text())
+```
+
+
+## tabellen opzoeken
+
+Waar we nu echt in geïnteresseerd waren, zijn de tabellen met de happiness scores. In tegenstelling tot onze paragraaf willen we hier alle tabellen opzoeken, daarvoor gebruiken we de find_all functie. Het resultaat zijn de twee score tabellen in html die we stoppen in de tables variabele.
+
+```{python, message=FALSE}
+tables = soup.find_all("table")
+```
+
+
+## tabellen wegschrijven
+
+Nu dat we deze tabellen in hun eigen variabele hebben gezet, gaan we deze wegschrijven naar html files, zodat we deze in een volgende video opnieuw kunnen inlezen. We maken eerst een file object aan met de open functie. Om nu naar dit file object te schrijven gebruiken we de write functie, deze neemt als argument de tekst die we willen wegschrijven. De write functie verwacht als argument een object van het type string. Met de str functie zetten we het tables object om naar tekst, en daarna geven we dit mee aan de write functie. Doordat we de Python with statement wordt de connectie naar de file automatisch gesloten.
+
+```{python, message=FALSE}
+with open("happiness_tables.html", "wb") as file:
+    file.write(tables)
+
+```
+
+Als resultaat hebben we nu een html file waarin beide tabellen, deze zullen we verder gebruiken in de volgende video.

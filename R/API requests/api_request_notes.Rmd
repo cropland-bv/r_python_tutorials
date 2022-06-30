@@ -1,0 +1,96 @@
+---
+title: "API requests maken met R"
+author: "Wessel"
+date: "11/15/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introductie
+
+Hallo, ik ben Wessel werkzaam bij CROPLAND, welkom op ons YouTube-kanaal. Dit is deel één van een driedelige reeks video's waarin ik jullie ga uitleggen hoe je met Shiny een web applicatie kan maken.
+
+Vandaag in de eerste video ga ik jullie uitleggen hoe je met R API calls kan uitvoeren. Dit doen we om de data te verzamelen die we voor onze applicatie gaan gebruiken. In de volgende video leg ik jullie uit hoe je die data kan visualiseren met Plotly, en in de laatste video maken we een Shiny applicatie met de interactieve visualisatie die we maken in de tweede video.
+
+Hieronder zien jullie de uiteindelijke data die we gaan afhalen. We gaan data afhalen voor de prijzen van een Tesla aandeel op 5 november. We zien in onze output het bedrijf Tesla, de datum, dan de open en de close; de startprijs van het aandeel op het moment dat de beurs open ging en terug sloot, en de high en low, de minimum en maximum prijs die het aandeel die dag heeft behaald. 
+
+```{r, echo=FALSE}
+r <- readRDS(file = "tesla.rds")
+
+r
+```
+
+
+## Packages
+
+Om te starten gaan we de R packages laden die we nodig hebben om een API request te maken. Het httr pakket hebben we nodig om HTTP requests te maken, dplyr gebruiken we voor de data te manipuleren die we terugkrijgen van de API, en tenslotte hebben we readr nodig om data weg te schrijven naar CSV.
+
+```{r packages, warning=FALSE, message=FALSE}
+library(httr)
+library(dplyr)
+library(readr)
+```
+
+
+## Extract
+
+Wat we nu gaan doen is een zeer eenvoudige ETL proces opbouwen om data uit een API te halen, die te transformeren, en uiteindelijk de resultaten weg te schrijven.
+
+Het eerste deelproces is de extract, hierbij gaan we onze HTTP request uitvoeren om de data uit onze API bron te halen. Het eerste wat we nodig hebben is de URL van de API die we willen gebruiken, in dit geval de Polygon API, en we zijn geïnteresseerd in prijs van Tesla aandelen op 5 november 2021. Het tweede wat we nodig hebben zijn de argumenten die we nodig hebben om onze API request te maken. In dit geval is dit enkel de API key, zonder key hebben we geen toestemming om data uit de API te halen. Vervolgens voeren we de request uit met behulp van de GET functie uit het httr pakket. In de stap daarna gebruiken we de content functie om enkel de data component te halen uit de response die we terug krijgen.
+
+We zien in het r object de statuscode OK, dit betekent dat de API request is geslaagd. De from is de datum waarvan we data hebben afgehaald. Symbol is het ticker symbool van Tesla. We zien dan de prijzen die we nodig hebben, alsook het totaal handelsvolume, de afterHours prijs, en de preMarket prijs van het aandeel, maar die gaan we niet verder gebruiken in onze video.
+
+```{r Extract, warning=FALSE, message=FALSE, echo=FALSE}
+url <- paste0("https://api.polygon.io/v1/open-close/TSLA/2021-11-17")
+arguments <- list(apiKey = "OMcTE5UfoH9CLldh8d_pfVMQfOrz73Mo")
+
+r <- GET(url, query = arguments)
+
+r <- content(r)
+
+r
+```
+
+
+## Transform
+
+De tweede stap in het ETL proces is de transform. Om te beginnen passen we het bovenstaande formaat van de data aan naar
+een dataframe.
+
+```{r Transform1, warning=FALSE, message=FALSE, echo=TRUE}
+r <- bind_rows(r)
+
+r
+```
+
+En in de tweede stap voegen we aan dit dataframe een kolom toe met de naam van het bedrijf, en vervolgens selecteren we enkel de kolommen die we verder willen gaan gebruiken. We hernoemen ook nog even de from kolom naar date.
+
+```{r Transform2, warning=FALSE, message=FALSE, echo=TRUE}
+r <- r %>%
+  mutate(company = "Tesla") %>%
+  select(company, date = from, open, close, high, low)
+
+r
+```
+
+
+## Load
+
+In het laatste ETL proces gaan we de data wegschrijven naar een CSV bestand, zodat we deze later kunnen herbruiken. Dan doen we met write_csv uit het readr pakket. Weg geven hier als argument ook mee dat we willen appenden, wat betekent dat we data gaan toevoegen, niet overschrijven.
+
+```{r Load, warning=FALSE, message=FALSE, echo=TRUE}
+write_csv(r, "Tesla.csv", append = TRUE)
+```
+
+
+
+```{r, include=FALSE}
+saveRDS(r, file = "tesla.rds")
+```
+

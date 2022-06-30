@@ -1,0 +1,116 @@
+---
+title: "Data manipuleren met dplyr"
+author: "Jeroen Claes"
+date: "11/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(scales)
+library(ggplot2)
+```
+
+![](/Users/jcl/Desktop/videochannel/1_databewerking_dplyr/covid_hospitalisatie.png)
+# Data manipuleren met dplyr
+
+## Packages
+```{r}
+library(readr)
+library(dplyr)
+library(readxl)
+```
+
+## Data inlezen
+
+```{r}
+covid  <- read_csv("https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv")
+```
+
+```{r}
+bevolking_bestand <- tempfile()
+
+download.file(url = "https://statbel.fgov.be/sites/default/files/files/opendata/bevolking%20naar%20woonplaats%2C%20nationaliteit%20burgelijke%20staat%20%2C%20leeftijd%20en%20geslacht/TF_SOC_POP_STRUCT_2021.xlsx", destfile = bevolking_bestand)
+bevolking <- read_excel(bevolking_bestand)
+```
+
+
+## Data bewerking
+
+```{r}
+glimpse(covid)
+```
+
+```{r}
+glimpse(bevolking)
+```
+
+## Aggregeren 
+
+```{r}
+bevolking <- bevolking %>%
+  group_by(TX_PROV_DESCR_NL) %>%
+  summarise(MS_POPULATION=sum(MS_POPULATION, na.rm=TRUE))
+bevolking
+```
+
+## Opschonen provincie-namen
+
+```{r}
+bevolking <- bevolking %>%
+  mutate(TX_PROV_DESCR_NL=gsub("Provincie ", "", TX_PROV_DESCR_NL)) %>%
+  mutate(TX_PROV_DESCR_NL=recode(TX_PROV_DESCR_NL, Henegouwen="Hainaut", Luxemburg="Luxembourg", `West-Vlaanderen`="WestVlaanderen", `Oost-Vlaanderen`="OostVlaanderen", `Waals-Brabant`="BrabantWallon", `Vlaams-Brabant`="VlaamsBrabant", "Luik"="Liège", "Namen"="Namur"))
+```
+
+```{r}
+bevolking <- bevolking %>%
+            mutate(TX_PROV_DESCR_NL=ifelse(is.na(TX_PROV_DESCR_NL), "Brussels", TX_PROV_DESCR_NL))
+bevolking
+```
+
+## Controleren
+```{r}
+
+identical(covid %>% pull(PROVINCE) %>% unique() %>% sort(),
+          bevolking %>% pull(TX_PROV_DESCR_NL) %>% unique() %>% sort())
+```
+
+## Covid-data selecteren
+
+```{r}
+covid <- covid %>%
+   select(DATE, PROVINCE, TOTAL_IN)
+covid
+```
+
+## Data verbinden
+
+```{r}
+covid <- covid %>%
+   left_join(bevolking, by=c("PROVINCE"="TX_PROV_DESCR_NL"))
+covid
+```
+
+## Percentage gehospitaliseerde bevolking berekenen
+
+```{r}
+covid <- covid %>%
+   mutate(`Percentage bevolking gehospitaliseerd`=TOTAL_IN/MS_POPULATION)
+covid
+
+```
+
+
+## Grafiek maken (out of scope)
+
+```{r}
+ggplot(covid, aes(x=DATE, y=`Percentage bevolking gehospitaliseerd`, color=PROVINCE, fill=PROVINCE)) + 
+  geom_point() +
+  geom_line() +
+  facet_wrap(~PROVINCE) +
+  scale_y_continuous(labels=scales::percent) +
+  theme_minimal() +
+  theme(legend.position="none", axis.text.x=element_text(angle=45, hjust = 1)) +
+  labs(x="Datum", title="Percentage bevolking gehospitaliseerd omwille van COVID-19")
+```
+

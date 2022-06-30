@@ -1,0 +1,66 @@
+---
+title: "Interactieve Plots met Plotly"
+author: "Wessel"
+date: "11/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Packages
+
+```{r packages, warning=FALSE, message=FALSE}
+library(plotly)
+library(readr)
+```
+
+
+## data inlezen
+
+```{r read, warning=FALSE, message=FALSE}
+df <- read_csv("history.csv")
+```
+
+
+## Line chart
+
+```{r linechart, warning=FALSE, message=FALSE}
+fig <- plot_ly(data = filter(df, company == "Tesla"),
+  x = ~date, y = ~close,
+  name = 'Tesla', type = 'scatter', mode = 'lines',
+  line = list(color = 'red', width = 4))
+
+fig <- fig %>% add_trace(data = filter(df, company == "Amazon"),
+  y = ~close, name = 'Amazon',
+  line = list(color = 'darkblue', width = 4))
+
+fig <- fig %>% add_trace(data = filter(df, company == "Apple"),
+  y = ~close, name = 'Apple',
+  line = list(color = 'darkgreen', width = 4))
+
+fig <- fig %>% add_trace(data = filter(df, company == "Microsoft"),
+  y = ~close, name = 'Microsoft',
+  line = list(color = 'purple', width = 4))
+
+fig <- fig %>% layout(title = "Tech Stock Prices",
+                      yaxis = list(title = "Price ($)"))
+
+fig
+```
+
+
+## Candlestick chart
+
+```{r candlechart, warning=FALSE, message=FALSE}
+fig <- filter(df, company == "Tesla") %>%
+  plot_ly(x = ~date, type="candlestick",
+          open = ~open, close = ~close,
+          high = ~high, low = ~low) 
+fig <- fig %>% layout(title = "Tesla Stock Prices",
+                      yaxis = list(title = "Price ($)"))
+
+fig
+```

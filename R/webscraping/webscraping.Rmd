@@ -1,0 +1,60 @@
+---
+title: "Webscraping met R"
+author: "Jeroen Claes"
+date: "11/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Webscraping met R
+
+
+## Packages
+
+```{r}
+library(rvest)
+library(dplyr)
+library(stringi)
+```
+
+
+## Een functie maken om websites te scrapen
+
+```{r}
+scrape <- function(url) {
+  pge <- read_html(url)
+  
+  txts <- pge %>% html_nodes(xpath="//p|//font|//h1|//h2|//h3|//h4|//span") %>%
+    html_text() %>%
+    stri_trim()
+  
+  txts<-txts[txts!=""]
+  
+  result <- tibble(url=url, text=txts)
+  return(result)
+}
+
+test <- scrape( "https://www.standaard.be")  
+glimpse(test)
+```
+
+
+## De functie toepassen op een lijst van urls
+```{r}
+urls <- c("https://www.demorgen.be", "https://www.hbvl.be/", "https://www.standaard.be", "https://www.vrtnws.be", "https://www.gva.be")
+resultaten <- lapply(urls, scrape)
+
+```
+
+## Resultaten aan elkaar lijmen
+
+```{r}
+
+resultaten <- resultaten %>%
+  bind_rows()
+
+glimpse(resultaten)
+```

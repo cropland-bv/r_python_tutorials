@@ -1,0 +1,80 @@
+---
+title: "Datamanipulaties in Python met Pandas"
+author: "Wessel"
+date: "11/18/2021"
+output:
+  html_document: default
+---
+
+
+## Libraries
+
+```{python, message=FALSE}
+import pandas as pd
+```
+
+
+## html tabellen inlezen
+
+```{python, include=FALSE}
+happiness_reports = pd.read_html("happiness_tables.html", encoding='utf-8')
+```
+
+
+## tabellen splitsen
+
+```{python, message=FALSE}
+happiness_report_2020 = happiness_reports[0]
+happiness_report_2019 = happiness_reports[1]
+
+happiness_report_2020.head(20)
+```
+
+
+## kolom toevoegen
+
+```{python, message=FALSE}
+happiness_report_2020["Jaar"] = 2020
+happiness_report_2019["Jaar"] = 2019
+
+happiness_report_2020.head()
+```
+
+
+## kolommen hernoemen
+
+```{python, message=FALSE, warning=FALSE}
+happiness_report_2020.columns = ["Positie", "Land", "Punten", "Jaar"]
+happiness_report_2019.columns = ["Positie", "Land", "Punten", "Jaar"]
+
+happiness_report_2020.head()
+```
+
+
+## dataframes combineren
+
+```{python, message=FALSE}
+happiness_reports = pd.concat([happiness_report_2020, happiness_report_2019])
+```
+
+
+## data analyse
+
+```{python, message=FALSE}
+# beste ranking van België
+happiness_reports[happiness_reports['Land'] == "België"].agg({'Positie' : ['min']})
+
+```
+
+```{python, message=FALSE}
+# gemiddelde score van Finland
+happiness_reports[happiness_reports['Land'] == "Finland"].agg({'Punten': ['mean']})
+```
+
+
+## dataframe wegschrijven
+
+```{python, message=T}
+happiness_reports.to_csv('happiness_reports.csv', index=0)
+```
+

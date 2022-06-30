@@ -1,0 +1,77 @@
+---
+title: "API's opzetten in Python met Flask"
+author: "Wessel"
+date: "11/18/2021"
+output:
+  html_document: default
+---
+
+
+## Introductie
+
+Hallo, ik ben Wessel werkzaam bij CROPLAND, welkom op ons YouTube-kanaal. Dit is de laatste video van een driedelige reeks video's waarin ik jullie toon hoe je met Python een REST API kan maken. Een REST API is een webapplicatie waarmee een client, de gebruiker die de request uitvoert, kan communiceren door middel van HTTP requests. De meest voorkomende HTTP request is een GET request, we gaan zo'n GET request implementeren en gebruiken voor onze API. Door middel van een GET request te doen naar onze web API met de juiste argumenten zal de client dan bepaalde data kunnen afhalen van onze server.
+
+
+## API initializeren
+
+Het eerste wat we moeten doen hiervoor is onze API initializeren, dit betekent dat we in Python een API object gaan aanmaken. Daarvoor laden we uit flask de Flask klasse en uit flask_restx de Api klasse. Flask is het Python web framework dat we gaan gebruiken om onze API mee te bouwen en flask_restx is een extensie op het Flask framework om gemakkelijker API's te kunnen maken en documentatie toe te voegen. In de eerste regel maken we onze Flask web applicatie aan, en in de tweede maken we van die webapplicatie specifiek een API. We geven daarvoor als argumenten mee, het flask applicatie object app, een versienummer voor onze API, en een titel voor onze API.
+
+```{python, message=FALSE}
+from flask import Flask
+from flask_restx import Api
+
+app = Flask()
+api = Api(app, version='1.0', title='Happiness Ranking API')
+```
+
+
+## data inlezen
+
+Nu gaan we de happiness rankings scores inlezen met het pandas pakket van de vorige video. We gebruiken hiervoor de read_csv functie uit de pandas library. We geven als argumenten mee, de naam van de file en de encoding.
+
+```{python, include=FALSE}
+import pandas as pd
+
+df = pd.read_csv('happiness_reports.csv', encoding='utf8')
+
+df.head()
+```
+
+
+## API opbouwen
+
+Nu kunnen we onze API verder gaan uitwerken. Hiervoor gebruiken we jsonify functie uit de flask library. Met jsonify kunnen we gemakkelijk data omzetten naar JSON, wat de standaard is voor het zenden van data naar en van een API. Daarnaast hebben we ook nog het request object nodig, dit geeft ons toegang tot de argumenten die de client meegeeft in zijn request. Tenslotte hebben we nog de Resource klasse nodig uit de flask_restx library. Deze Resources dienen als bouwblokken voor de API.
+
+Het eerste wat we dan doen is onze route definiëren, dit geeft aan naar welke url eindpunt de client de request gaat moeten sturen. In de lijn daarna documenteren we ons eindpunt en geven we aan welke argumenten we verwachten. In dit geval is dit een jaar en een land.
+
+Vervolgens definiëren we de code die we willen laten lopen wanneer we een request binnenkrijgen. We halen eerst de argumenten uit het request object van de client en stoppen deze in twee variabelen, year en country. Hiervoor geven me mee als argumenten, de naam, het type van de waarde dat we verwachten, en we geven ook een default waarde indien de client zou vergeten een argument mee te geven.
+
+Daarna gaan we in ons dataframe de data opzoeken, waar de client naar vraagt. We filteren dus ons dataframe op rijen waar het jaar en land gelijk is aan de input argumenten van de client. Dit resultaat wijzen we toe aan de variabele out. Daarna selecteren we uit dit dataframe de positie kolom en tenslotte zetten we het dataframe met de int functie om naar een numerieke waarde. We sturen dit met de return statement daarna terug naar de client als JSON.
+
+
+```{python, message=FALSE}
+from flask import jsonify, request
+from flask_restx import Resource
+
+@api.route("/rank")
+@api.doc(params={'year': 'Year', 'country': 'Country'})
+class Rank(Resource):
+    def get(self):
+        year  = request.args.get('year', type=int, default=2020)
+        country  = request.args.get('country', type=str, default='België')
+        
+        out = df[(df['Jaar'] == year) & (df['Land'] == country)]
+        rank = int(out['Positie'])
+        
+        return jsonify(rank)
+
+```
+
+
+## API starten
+
+Het enige wat we nu nog moeten doen is het opstarten van onze API door middel van de run functie. Ik geef hier ook even nog het argument mee debug is gelijk aan true, hierdoor kan ik zo meteen even een demo geven in mijn web browser.
+
+```{python, include=FALSE}
+app.run(port=5000, debug=True)
+```
